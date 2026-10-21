@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Huntress</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light dark;
+--bg:#eef1f4;--sf:#fff;--tx:#14202b;--mu:#5c6b78;--bd:#d3dae1;--ac:#0b6a88;--ac2:#dcedf3;--wn:#a24b00;--wn2:#fdeedb;--ok:#1b6b3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f161c;--sf:#18222b;--tx:#e6edf2;--mu:#93a3b0;--bd:#2a3844;--ac:#58c0e0;--ac2:#14323d;--wn:#f2b070;--wn2:#3a2a15;--ok:#6fd199}}
+:root[data-theme="dark"]{--bg:#0f161c;--sf:#18222b;--tx:#e6edf2;--mu:#93a3b0;--bd:#2a3844;--ac:#58c0e0;--ac2:#14323d;--wn:#f2b070;--wn2:#3a2a15;--ok:#6fd199}
+*{box-sizing:border-box}html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100%}
+h1,h2,.big{font-family:"Space Grotesk",system-ui,sans-serif;margin:0}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+header p{margin:2px 0 12px;color:var(--mu)}
+nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
+nav button{white-space:nowrap}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--ac)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+button.on,button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme="dark"] button.on,:root[data-theme="dark"] button.pri{color:#06232d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button.on,:root:not([data-theme="light"]) button.pri{color:#06232d}}
+input,select,textarea{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:7px 9px;width:100%}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat b{display:block;font:700 26px "Space Grotesk",system-ui,sans-serif}.stat span{color:var(--mu);font-size:13px}
+.hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.big{font-size:64px;line-height:1;color:var(--ac)}
+.mu{color:var(--mu);font-size:13px}.row{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.row>*{flex:1;min-width:110px}.row>button{flex:0 0 auto;min-width:0}
+.tag{display:inline-block;border-radius:99px;padding:1px 9px;font-size:12px;background:var(--ac2);color:var(--ac)}
+.tag.w{background:var(--wn2);color:var(--wn)}
+.split{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.rk{font:700 18px "Space Grotesk",system-ui,sans-serif;color:var(--ac);min-width:34px}
+dialog{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:12px;width:min(640px,94vw);max-height:90vh;padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.5)}label{display:block;font-size:13px;color:var(--mu);margin:8px 0 2px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:520px){.f2{grid-template-columns:1fr}}
+section{display:none}section.on{display:block}h2{font-size:19px;margin:4px 0 8px}
+textarea{min-height:110px}
+</style></head><body><div class="wrap">
+<header><h1>Huntress</h1><p>Pick where you want to work, apply on their site, reach a human, and log it all.</p></header>
+<nav id="nav"></nav>
+<section id="t-dash"></section><section id="t-list"></section><section id="t-apps"></section>
+<section id="t-want"></section><section id="t-msg"></section><section id="t-data"></section>
+<dialog id="dlg"></dialog></div>
+<script>
+const K='huntTracker.v1';let S={companies:[],apps:[],wants:[],pref:{commute:'',env:'Startup'},me:{who:'',why:''}};
+try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10),today=()=>iso(new Date());
+const add=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return iso(d)};
+const opt=(a,v)=>a.map(x=>`<option${x===v?' selected':''}>${esc(x)}</option>`).join('');
+const OUT=['Open','Interview','Offer','Rejected','Closed'],KIND=['Initial','Follow-up 1','Follow-up 2','Other'],RESP=['None','Replied','Referred','Declined'];
+const TABS=[['dash','Today'],['list','Kill list'],['apps','Applications'],['want','What I want'],['msg','Message builder'],['data','Backup']];
+let tab='dash',draft=null;
+const rankOf=n=>{const i=S.companies.findIndex(c=>c.name.toLowerCase()===String(n).trim().toLowerCase());return i<0?null:i+1};
+function due(a){if(!a.applied||['Offer','Rejected','Closed'].includes(a.outcome))return null;const L=a.log||[];
+ if(L.some(m=>m.resp==='Replied'||m.resp==='Referred'))return null;const f=L.find(m=>m.kind==='Initial');
+ if(!f)return{date:a.applied,label:'Send the 5-part message to the recruiter'};
+ if(!L.some(m=>m.kind==='Follow-up 1'))return{date:add(f.date,7),label:'Follow-up 1: one easy question'};
+ if(!L.some(m=>m.kind==='Follow-up 2'))return{date:add(f.date,21),label:'Follow-up 2: still hiring?'};return null}
+function nav(){$('#nav').innerHTML=TABS.map(([k,l])=>`<button class="${k===tab?'on':''}" data-t="${k}">${l}</button>`).join('');
+ TABS.forEach(([k])=>$('#t-'+k).className=k===tab?'on':'')}
+$('#nav').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;nav();render()}};
+function render(){({dash,list,apps,want,msg,data}[tab])()}
+function dash(){const A=S.apps,msgs=A.flatMap(a=>a.log||[]),rep=msgs.filter(m=>m.resp==='Replied'||m.resp==='Referred').length,
+ rej=A.filter(a=>a.outcome==='Rejected').length,nos=msgs.filter(m=>m.resp==='None'||m.resp==='Declined').length+rej,left=Math.max(0,99-nos);
+ const ds=A.map(a=>({a,d:due(a)})).filter(x=>x.d).sort((x,y)=>x.d.date<y.d.date?-1:1);
+ const used=new Set(A.map(a=>String(a.company).toLowerCase())),nxt=[...S.companies].reverse().find(c=>!used.has(c.name.toLowerCase()));
+ $('#t-dash').innerHTML=`<div class="card hero"><div class="big">${left}</div><div><h2>no's left to hear</h2><div class="mu">Expect 99 no's per 100 tries. Each rejection, unanswered message, or decline counts down, so silence is expected, not personal. Count so far: ${nos}.</div></div></div>
+ <div class="grid" style="margin-bottom:10px">${[['Companies',S.companies.length],['Applications',A.length],['Contacts',A.filter(a=>a.contact).length],['Messages sent',msgs.length],['Replies',rep+(msgs.length?' ('+Math.round(rep/msgs.length*100)+'%)':'')],['Interviews',A.filter(a=>a.outcome==='Interview'||a.outcome==='Offer').length],['Offers',A.filter(a=>a.outcome==='Offer').length],['Rejections',rej]].map(([l,v])=>`<div class="card stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+ ${nxt?`<div class="card"><h2>Next practice target</h2><div>Start at the bottom: <b>${esc(nxt.name)}</b> (rank ${rankOf(nxt.name)}) has no application yet. Read its careers page, newsroom, and recruiters on LinkedIn.</div></div>`:''}
+ <div class="card"><h2>Follow-ups due</h2>${ds.length?ds.map(({a,d})=>`<div class="split" style="margin-bottom:8px"><div><b>${esc(a.company)}</b> ${esc(a.title)} <span class="mu">${esc(a.jobId)}</span><br><span class="mu">${esc(d.label)}</span></div><div><span class="tag ${d.date<=today()?'w':''}">${d.date<today()?'overdue, ':''}${d.date}</span> <button data-edit="${a.id}">Open</button></div></div>`).join(''):'<div class="mu">Nothing due. Apply on a company site, then message the recruiter the same day.</div>'}</div>`;}
+$('#t-dash').onclick=e=>{if(e.target.dataset.edit)editApp(e.target.dataset.edit)};
+function list(){const C=S.companies;$('#t-list').innerHTML=`<div class="card"><h2>Companies you want to work for</h2><div class="mu">Rank by desire, 1 is the top. Practice on the lowest ranks first. Only list places you really want to work.</div>
+ <div class="row" style="margin-top:8px"><input id="cn" placeholder="Company name"><select id="ct">${opt(['Startup','Corporate'],'')}</select><input id="cu" placeholder="Careers page URL"><button class="pri" id="ca">Add</button></div></div>
+ ${C.map((c,i)=>`<div class="card split"><div style="display:flex;gap:10px"><span class="rk">${i+1}</span><div><b>${esc(c.name)}</b> <span class="tag">${esc(c.type)}</span> ${S.apps.some(a=>a.company.toLowerCase()===c.name.toLowerCase())?'<span class="tag">applied</span>':''}<br>${c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener" style="color:var(--ac)">Careers page</a>`:''}<input data-n="${i}" value="${esc(c.note||'')}" placeholder="Notes: recruiters, newsroom names, funding" style="margin-top:4px;min-width:260px"></div></div>
+ <div><button data-m="${i}" data-d="-1" aria-label="Move up">Up</button> <button data-m="${i}" data-d="1" aria-label="Move down">Down</button> <button data-x="${i}">Remove</button></div></div>`).join('')||'<div class="mu">No companies yet. Find some by searching "Series B funding" in Google News, or by looking at where people with your title work.</div>'}`}
+$('#t-list').onclick=e=>{const d=e.target.dataset,C=S.companies;
+ if(e.target.id==='ca'){const n=$('#cn').value.trim();if(!n)return;C.push({name:n,type:$('#ct').value,url:$('#cu').value.trim(),note:''})}
+ else if(d.m!==undefined){const i=+d.m,j=i+ +d.d;if(j<0||j>=C.length)return;[C[i],C[j]]=[C[j],C[i]]}
+ else if(d.x!==undefined){C.splice(+d.x,1)}else return;save();list()};
+$('#t-list').oninput=e=>{if(e.target.dataset.n!==undefined){S.companies[+e.target.dataset.n].note=e.target.value;save()}};
+function apps(){$('#t-apps').innerHTML=`<div class="split" style="margin-bottom:8px"><h2>Applications</h2><button class="pri" id="na">Add application</button></div>`+
+ (S.apps.slice().sort((a,b)=>(b.applied||'')>(a.applied||'')?1:-1).map(a=>{const d=due(a),r=rankOf(a.company);return `<div class="card split"><div><b>${esc(a.company)}</b> ${r?`<span class="tag">rank ${r}</span>`:''} <span class="tag ${a.outcome==='Offer'?'':'w'}">${a.outcome}</span><br>${esc(a.title)} <span class="mu">${esc(a.jobId)} ${a.applied?'applied '+a.applied:''}</span><br><span class="mu">${a.contact?esc(a.contact)+' ('+esc(a.contactRole||'contact')+'), ':''}${(a.log||[]).length} messages${d?'. Next: '+esc(d.label)+' on '+d.date:''}</span></div><button data-edit="${a.id}">Edit</button></div>`}).join('')||'<div class="mu">None yet. Apply on the company site, note the job ID, then log it here.</div>')}
+$('#t-apps').onclick=e=>{if(e.target.id==='na')editApp();else if(e.target.dataset.edit)editApp(e.target.dataset.edit)};
+const F=[['company','Company'],['title','Job title'],['jobId','Job ID (req number)'],['url','Posting link'],['resume','Resume version sent'],['applied','Date applied','date'],['contact','Contact name'],['contactRole','Contact role'],['contactUrl','Contact profile link']];
+function editApp(id){const a=S.apps.find(x=>x.id===id);draft=a?JSON.parse(JSON.stringify(a)):{id:uid(),company:'',title:'',jobId:'',url:'',resume:'',applied:today(),contact:'',contactRole:'',contactUrl:'',log:[],outcome:'Open',notes:''};draft._old=!!a;drawDlg();$('#dlg').showModal()}
+function drawDlg(){const D=draft;$('#dlg').innerHTML=`<h2>${D._old?'Edit':'New'} application</h2><datalist id="cl">${S.companies.map(c=>`<option value="${esc(c.name)}">`).join('')}</datalist>
+ <div class="f2">${F.map(([k,l,t])=>`<div><label>${l}</label><input ${k==='company'?'list="cl"':''} type="${t||'text'}" data-k="${k}" value="${esc(D[k])}"></div>`).join('')}<div><label>Outcome</label><select data-k="outcome">${opt(OUT,D.outcome)}</select></div></div>
+ <label>Messages to the contact (initial, then about 1 and 3 weeks later)</label>${D.log.map((m,i)=>`<div class="row"><input type="date" value="${m.date}" data-l="${i}" data-f="date"><select data-l="${i}" data-f="kind">${opt(KIND,m.kind)}</select><select data-l="${i}" data-f="resp">${opt(RESP,m.resp)}</select><button type="button" data-del="${i}" aria-label="Delete message">Remove</button></div>`).join('')}
+ <button type="button" id="al">Log a message</button><label>Notes</label><textarea data-k="notes" style="min-height:60px">${esc(D.notes)}</textarea>
+ <div class="row" style="margin-top:12px"><button class="pri" id="sv">Save</button><button id="cx">Cancel</button>${D._old?'<button id="rm">Delete</button>':''}</div>`}
+$('#dlg').addEventListener('input',e=>{const t=e.target;if(t.dataset.k)draft[t.dataset.k]=t.value;else if(t.dataset.l!==undefined)draft.log[+t.dataset.l][t.dataset.f]=t.value});
+$('#dlg').addEventListener('click',e=>{const t=e.target,L=draft&&draft.log;
+ if(t.id==='al'){const k=!L.some(m=>m.kind==='Initial')?'Initial':!L.some(m=>m.kind==='Follow-up 1')?'Follow-up 1':!L.some(m=>m.kind==='Follow-up 2')?'Follow-up 2':'Other';L.push({date:today(),kind:k,resp:'None'});drawDlg()}
+ else if(t.dataset.del!==undefined){L.splice(+t.dataset.del,1);drawDlg()}
+ else if(t.id==='cx')$('#dlg').close();
+ else if(t.id==='rm'){S.apps=S.apps.filter(a=>a.id!==draft.id);save();$('#dlg').close();render()}
+ else if(t.id==='sv'){if(!draft.company.trim()){$('#dlg').querySelector('[data-k=company]').focus();return}delete draft._old;const i=S.apps.findIndex(a=>a.id===draft.id);i<0?S.apps.push(draft):S.apps[i]=draft;save();$('#dlg').close();render()}});
+function want(){const W=S.wants;$('#t-want').innerHTML=`<div class="card"><h2>What I want from the next job</h2><div class="mu">Rank it. Notice what you left out, then use it to filter offers and interview the employer.</div>
+ <div class="row" style="margin-top:8px"><input id="wi" placeholder="Autonomy, remote, growth, conference travel"><button class="pri" id="wa">Add</button></div>
+ ${W.map((w,i)=>`<div class="split card" style="margin:6px 0"><span><span class="rk">${i+1}</span> ${esc(w)}</span><span><button data-m="${i}" data-d="-1">Up</button> <button data-m="${i}" data-d="1">Down</button> <button data-x="${i}">Remove</button></span></div>`).join('')}</div>
+ <div class="card"><div class="f2"><div><label>Ideal commute (minutes)</label><input id="pc" type="number" value="${esc(S.pref.commute)}"></div><div><label>Corporate or startup</label><select id="pe">${opt(['Startup','Corporate'],S.pref.env)}</select></div></div></div>`}
+$('#t-want').onclick=e=>{const d=e.target.dataset,W=S.wants;
+ if(e.target.id==='wa'){const v=$('#wi').value.trim();if(!v)return;W.push(v)}else if(d.m!==undefined){const i=+d.m,j=i+ +d.d;if(j<0||j>=W.length)return;[W[i],W[j]]=[W[j],W[i]]}else if(d.x!==undefined)W.splice(+d.x,1);else return;save();want()};
+$('#t-want').onchange=e=>{if(e.target.id==='pc')S.pref.commute=e.target.value;if(e.target.id==='pe')S.pref.env=e.target.value;save()};
+let sel='';
+function msg(){const A=S.apps;if(!sel&&A[0])sel=A[0].id;$('#t-msg').innerHTML=`<div class="card"><h2>Recruiter message builder</h2><div class="mu">Five parts: why I'm reaching out, who I am, why I care, what I want (a small ask), how to reach me. Check the name, company, and job ID, then send.</div>
+ <label>Application</label><select id="ms">${A.map(a=>`<option value="${a.id}"${a.id===sel?' selected':''}>${esc(a.company)}: ${esc(a.title)}</option>`).join('')||'<option>Add an application first</option>'}</select>
+ <label>Who I am (one sentence)</label><input id="mw" value="${esc(S.me.who)}"><label>Why this company and role</label><input id="my" value="${esc(S.me.why)}">
+ <label>Message</label><textarea id="mo" style="min-height:170px"></textarea><div class="row" style="margin-top:8px"><button class="pri" id="mc">Copy message</button><span class="mu" id="mst"></span></div></div>`;build()}
+function build(){const a=S.apps.find(x=>x.id===sel);if(!a)return;const nm=(a.contact||'').split(' ')[0]||'there';
+ $('#mo').value=`Hello ${nm}, I recently applied for ${a.jobId||'[job ID]'}, ${a.title}, through ${a.company}'s careers site. ${S.me.who||'[One sentence about who you are]'} ${S.me.why||'[Why this company and role]'} Would you be open to a 10 to 15 minute call, or could you point me to the recruiter responsible for this role? You can reach me at [email or phone] or here on LinkedIn. Thank you, [Your name]`}
+$('#t-msg').oninput=e=>{if(e.target.id==='mw')S.me.who=e.target.value;if(e.target.id==='my')S.me.why=e.target.value;save();build()};
+$('#t-msg').onchange=e=>{if(e.target.id==='ms'){sel=e.target.value;build()}};
+$('#t-msg').onclick=async e=>{if(e.target.id!=='mc')return;const t=$('#mo');t.select();let ok=false;try{await navigator.clipboard.writeText(t.value);ok=true}catch(_){try{ok=document.execCommand('copy')}catch(_){}}$('#mst').textContent=ok?'Copied':'Copy blocked: the text is selected, press Ctrl/Cmd+C'};
+function data(){$('#t-data').innerHTML=`<div class="card"><h2>Backup and spreadsheet export</h2><div class="mu">Your data lives in this browser only. Copy the backup text somewhere safe, or paste a saved backup to restore it.</div>
+ <label>Backup (JSON)</label><textarea id="bj">${esc(JSON.stringify(S))}</textarea><div class="row" style="margin-top:8px"><button id="bc">Copy backup</button><button class="pri" id="bl">Load pasted backup</button><button id="bt">Show spreadsheet rows</button></div><div class="mu" id="bs"></div></div>`}
+$('#t-data').onclick=async e=>{const t=$('#bj'),id=e.target.id;if(id==='bc'){t.select();try{await navigator.clipboard.writeText(t.value);$('#bs').textContent='Copied'}catch(_){$('#bs').textContent='Selected: press Ctrl/Cmd+C'}}
+ else if(id==='bl'){try{const o=JSON.parse(t.value);if(!Array.isArray(o.apps)||!Array.isArray(o.companies))throw 0;S=Object.assign(S,o);save();$('#bs').textContent='Loaded'}catch(_){$('#bs').textContent='That text is not a valid backup'}}
+ else if(id==='bt'){const h=['Company','Rank','Title','Job ID','Link','Resume','Applied','Contact','Contact role','Contact link','Messages','Last response','Outcome','Next follow-up'];
+  t.value=[h,...S.apps.map(a=>{const L=a.log||[],d=due(a);return [a.company,rankOf(a.company)||'',a.title,a.jobId,a.url,a.resume,a.applied,a.contact,a.contactRole,a.contactUrl,L.map(m=>m.date+' '+m.kind).join('; '),L.length?L[L.length-1].resp:'',a.outcome,d?d.date:'']})].map(r=>r.map(c=>String(c??'').replace(/[\t\n]/g,' ')).join('\t')).join('\n');t.select();$('#bs').textContent='Copy these rows and paste into a spreadsheet'}};
+nav();render();
+</script></body></html>
